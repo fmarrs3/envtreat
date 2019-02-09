@@ -3,7 +3,8 @@ This directory contains data and code used to create the results in Campbell, BW
 
 # subdirectories
 `code`  --  Code to reproduce all results from the paper
+
 `data`  --  All data used in paper
 
-# To run
+# to run
 Open `code/reproduce_envtreat.R` script and read directions therein
