@@ -1,0 +1,55 @@
+
+####
+funs.fixedLogit:
+  fixedLogitLassoInf:
+   simplify computation and add KKT check for unscaled g, including warning statement
+########################################### FM
+   # g=scale(t(x),FALSE,1/ww)%*%(z-etahat)/lambda # negative gradient scaled by lambda
+  g=t(x) %*% (y - prhat)/lambda   # simplified form  # + a/lambda???
+  
+  mx <- Matrix::colSums(x)/nrow(x) 
+  sdx <- sqrt( Matrix::colSums(x^2)/nrow(x) - mx^2 )
+  gscaled <- t(x) %*% (y - prhat)/lambda/sdx  - mx*sum(y - prhat)/lambda/sdx
+  ###########################################
+
+  change vars computation to work better for sparse matrices
+###############################################
+  # vars = which(abs(beta[-1]) > tol.beta / sqrt(colSums(x^2)))
+  vars = which(abs(beta[-1]) > tol.beta / sqrt(Matrix::colSums(x^2)))
+  ###############################################
+
+change MM computation to be more efficient and to work with sparse matrices
+######################################### FM: more efficient and works with sparseMatrices
+  #constraints for active variables             
+  # MM=solve(t(xxm)%*%w%*%xxm)
+  # MM=solve(scale(t(xxm),F,1/ww)%*%xxm)
+
+  rm(x)
+  wwd <- sparseMatrix(i=1:length(ww), j=1:length(ww), x=ww)
+  # xxmw <- wwd %*% xxm
+  MM1 <- t(xxm) %*% wwd %*% xxm
+  rm(xxm)
+  # MM <- solve(as.matrix(MM1))
+  MM <- chol2inv(chol(MM1))
+  rm(MM1)
+  MM <- as.matrix(MM)  # convert to dense matrix as unlikely to be sparse
+  #######################################
+
+  Remove unnecessary glm() call:
+#######################################################  FM: removed
+  # fit0=glm(y~x[,m],family="binomial")   # do we need this?
+  # sfit0=summary(fit0)
+  ###########################################
+
+  Fix to allow any input signif level alpha=alpha:
+      ##############################################################   FM: Fix to include input alpha
+     # junk2=mypoly.int.lee(bbar,vj,vlo[jj],vup[jj],sd[jj],alpha=.1)
+       junk2=mypoly.int.lee(bbar,vj,vlo[jj],vup[jj],sd[jj],alpha=alpha)
+       ###############################################################
+
+end funs.fixedLogit
+####
+
+
+funs.common:
+  remove !is.matrix(x) to allow for sparse entry in checkargs.xy
